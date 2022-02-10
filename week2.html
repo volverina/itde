@@ -3,7 +3,10 @@
 <html>
 	<script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
 	<a-scene>
-		<a-sky color="grey"></a-sky>
+		<a-sky color="grey"
+		       animation="property: components.material.material.color;
+type: color; from: black; to: white; loop: true; dur: 8000"
+		       ></a-sky>
 		<a-torus src="https://live.staticflickr.com/6001/5929632971_20466b7f19.jpg" 
 			 animation="property: position; to: 2 1 -5; dur: 5000; easing: linear; loop: false" 
 			 color="green" position="-2 1 -5" radius="1.2"></a-torus>
