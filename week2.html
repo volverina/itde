@@ -4,7 +4,9 @@
 	<script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
 	<a-scene>
 		<a-sky color="grey"></a-sky>
-		<a-torus src="https://live.staticflickr.com/6001/5929632971_20466b7f19.jpg" color="green" position="-2 1 -5" radius="1.2"></a-torus>
+		<a-torus src="https://live.staticflickr.com/6001/5929632971_20466b7f19.jpg" 
+			 animation="property: position; to: 2 1 -5; dur: 5000; easing: linear; loop: false" 
+			 color="green" position="-2 1 -5" radius="1.2"></a-torus>
 		<a-cone src="https://live.staticflickr.com/6001/5929632971_20466b7f19.jpg" position="1 1 -5" color="orange" wireframe="false"
 			segments-height="8" segments-radial="4"></a-cone>
 
