@@ -49,7 +49,7 @@
       <a-entity position="0 1.5 -1.5" particle-system="preset: snow; color: #0000F0; size: 3;"></a-entity>    
     </a-marker>
 
-    <a-marker type="pattern" url='pattern-ankeli.patt'>
+    <a-marker type="pattern" registerevents url='pattern-ankeli.patt'>
      <a-entity geometry="primitive: box" material="color: red"
      animation__mouseenter="property: rotation; from:0 0 0; to: 0 0 360; startEvents: mouseenter; dur: 1000"; 
      animation__mouseleave="property: components.material.material.color; type: color; from: blue; to: red; startEvents: mouseleave; dur:1000;" jump> </a-entity>
