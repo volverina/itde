@@ -261,11 +261,11 @@ matrix operator*(matrix a, matrix b)
 
 // класс для реалізації нейронної мережі
 
-    //функція активації нейрону
-    double activate(double s)
-    {
-        return 1/(1+exp(-s)); // наприклад, сигмоїда
-    }
+//функція активації нейрону
+double activate(double s, double alpha=0.5)
+{
+    return 1/(1+exp(-2*alpha*s)); // наприклад, сигмоїда
+}
 
 
 class neural
@@ -276,6 +276,7 @@ class neural
     dvec min_input, max_input, min_output, max_output; // вектори для зберігання граничних значень
     void findminmax(); // пошук мінімальних та максимальних значень
     dvec normalize(dvec);// нормалізація входу
+    dvec normalize_output(dvec);// нормалізація виходу
     dvec denormalize(dvec);// денормалізація виходу
 public:
     matrix patterns_input, patterns_output; // матриці входів та виходів образів
@@ -285,7 +286,8 @@ public:
     bool load(string s); // завантаження даних для навчання
     dvec forward(dvec); // проходження сигналу через мережу
     void rand(double, double); // встановлення випадкових матриць коефіцієнтів
-    double train(double err=0.001,int tries=100000,bool out=false); // "навчання" нейронної мережі
+    double train(double err=0.001,int tries=100000,bool out=false); // стохастичне "навчання" нейронної мережі
+    double train_bp(double err=0.001,int tries=100000, double alpha=0.5, double eta=0.3, bool out=false); // "навчання" нейронної мережі
     double geterror(); // поточна помилка навченостi нейронної мережі
     bool savenetwork(string); // збереження архітектури мережі у файлі
     //bool loadnetwork(string); // завантаження архітектури мережі з файлу
@@ -447,6 +449,18 @@ dvec neural::normalize(dvec x)// нормалізація входу
     return res;
 }
 
+dvec neural::normalize_output(dvec x)// нормалізація виходу
+{
+    dvec res=x;
+
+    for(int i=0;i<x.size();i++)
+        if(max_output[i]!=min_output[i])
+            res[i]=(x[i]-min_output[i])/(max_output[i]-min_output[i]);
+        else 
+            res[i]=(x[i]-min_output[i])/0.0001;
+    return res;
+}
+
 dvec neural::denormalize(dvec y)// денормалізація виходу
 {
     dvec res=y;
@@ -468,12 +482,12 @@ matrix make(dvec v)
 }
 
 // застосування функції активації до вектора
-dvec apply(dvec s)
+dvec apply(dvec s, double alpha=0.5)
 {
     dvec res=s;
 
     for(int i=0;i<s.size();i++)
-        res[i]=activate(s[i]);
+        res[i]=activate(s[i], alpha);
     return res;
 }
 
@@ -510,10 +524,105 @@ double neural::geterror()
     for(int i=0;i<patterns_input.size();i++)
     {
         dvec yc=forward(patterns_input[i]);
-        error+= sqrt((patterns_output[i]-yc)*(patterns_output[i]-yc));
+        error+= 0.5*(patterns_output[i]-yc)*(patterns_output[i]-yc);
     }
-    error/=patterns_input.size();
+    //error/=patterns_input.size();
 
+    return error;
+}
+
+
+// "навчання" нейронної мережі методом зворотного поширення помилки
+double neural::train_bp(double err,int NUMBER_OF_STEPS, double alpha, double eta, bool out) 
+{
+    double error=err+1, newerror;
+    
+    // створення матриць змін звагів
+    vector<matrix> deltaweights=vector<matrix>(layers.size()-1);
+    for(int i=0; i<layers.size()-1; i++)
+        deltaweights[i]=make(layers[i]+1, layers[i+1]);
+
+    double olderror=geterror();
+    //Повторити NUMBER_OF_STEPS раз:
+    for(int numtries=0;error>err && numtries<NUMBER_OF_STEPS;numtries++)
+    {
+        error=0;
+
+        int m=patterns_input.size();
+        for(int d=0;d<m;d++)//Для всіх d від 1 до m:
+        {
+            // Подати {\displaystyle \{x_{i}^{d}\}}{\displaystyle \{x_{i}^{d}\}} на вхід сітки і підрахувати виходи {\displaystyle o_{i}}{\displaystyle o_{i}} кожного вузла.
+            vector<dvec> outputs;
+
+            dvec x=normalize(patterns_input[d]), y;
+            dvec saved_input=x;
+
+            for(int i=0;i<weights.size();i++)
+            {
+                x.push_back(1); // нейрон зміщення - bias
+                matrix xn=make(x);
+                matrix s=xn*weights[i];
+                y=apply(s[0], alpha);
+                outputs.push_back(y);
+                x=y;
+            }
+
+            dvec yc=denormalize(y);
+            error+= 0.5*(patterns_output[d]-yc)*(patterns_output[d]-yc);
+
+            //Для всіх { k\in Outputs}{\displaystyle k\in Outputs}
+            //{ \delta _{k}=o_{k} (1-o_{k})(t_{k}-o_{k})}
+            
+            vector<dvec> deltas=outputs;
+
+            int last=outputs.size()-1;
+            for(int k=0;k<outputs[last].size();k++)
+            {
+                dvec t=normalize_output(patterns_output[d]);
+                deltas[last][k]=outputs[last][k]*(1-outputs[last][k])*(t[k]-outputs[last][k]);
+            }
+
+            // Для кожного рівня l, починаючи з останнього
+            for(int l=last-1;l>=0;l--)
+                //Для кожного вузла j рівня l порахувати
+                for(int j=0;j<outputs[l].size();j++)
+                //{\delta _{j}=o_{j}(1-o_{j})    \sum _{k\in Children(j)}\delta _{k}w_{j,k}}
+                {
+                    double sum=0;
+
+                    for(int k=0;k<deltas[l+1].size();k++)
+                        sum+=deltas[l+1][k]*weights[l+1][j][k];
+
+                    deltas[l][j]=outputs[l][j]*(1-outputs[l][j])*sum;
+                }
+
+            outputs.insert(outputs.begin(), saved_input);
+            for(int l=0;l<deltaweights.size();l++)
+            {
+                //Для кожного ребра сітки {i, j}
+                for(int i=0;i<deltaweights[l].size();i++)
+                    for(int j=0;j<deltaweights[l][i].size();j++)
+                        //{ \Delta w_{i,j}=\alpha \Delta w_{i,j}+(1-\alpha )\eta \delta _{j}o_{i}}
+                        deltaweights[l][i][j]=alpha*deltaweights[l][i][j] +(1-alpha)*eta
+                            *deltas[l][j]*outputs[l][i]; //?????
+
+                //{ w_{i,j}=w_{i,j}+\Delta w_{i,j}}
+                weights[l]=weights[l]+deltaweights[l];
+                /*
+                    Без зайвих кроків
+                */
+                double newerror=geterror();
+                if(newerror>olderror)
+                    weights[l]=weights[l]-deltaweights[l];
+                else
+                    olderror=newerror;
+            }      
+        }
+        savenetwork(filename);
+        if(out)
+            cout<<"Поточна помилка = "<<error<<" після "<<numtries <<" кроків"<<endl;
+    }
+    
     return error;
 }
 
@@ -566,11 +675,11 @@ bool neural::savenetwork(string filename) // збереження архітек
 
 int main()
 {
-    
     vector<int> v={16, 32, 48, 24, 16, 7, 3, 6, 3};
-    //neural net(v, "network.txt");
+    //vector<int> v={16, 32, 48, 24, 16, 7, 3, 3};
+    //neural net(v, "network_bp.txt");
 
-    neural net("network.txt");
+    neural net("network_bp.txt");
     
     if(!net.load("/home/cc/Documents/2022_04_12/patterns.txt"))
     {
@@ -578,8 +687,9 @@ int main()
         return 1;
     }
 
+    //net.rand(-20,+20); // встановлення випадкових значень для train_bp
 /*
-    net.rand(-5,5);
+    net.rand(-0.1,+0.1); // встановлення випадкових значень для train_bp
     //cout<<net.patterns_input <<endl << net.patterns_output <<endl;
     cout<<net<<endl;
 */
@@ -593,7 +703,8 @@ int main()
     double error=net.geterror();
     cout << "Помилка до навчання = " << error << endl;
 
-    error=net.train(0.00001, 100000, true);
+    //error=net.train(0.00001, 100000, true);
+    error=net.train_bp(0.000001, 100000, 0.5, 90, true);
     cout << "Помилка після навчання = " << error << endl;
 
     for(int i=0;i<net.patterns_input.size();i++)
@@ -603,6 +714,7 @@ int main()
         cout<<"Для входу "<<net.patterns_input[i] << " та виходу " <<net.patterns_output[i] << 
         " отримали значення "<<yc<<endl;
     }
+
 
     /*
     double m1[]={1, 2, 3, 4, 5, 6},
