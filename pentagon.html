@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>П'ятикутник</title>
+	<script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
+	<script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
+	<script src="pentagon_code.js"></script>
+</head>
+
+<body>
+	<a-scene embedded vr-mode-ui="enabled: false;" arjs="detectionMode: mono_and_matrix;">
+
+		<a-marker type="pattern" url="https://raw.githubusercontent.com/AR-js-org/AR.js/master/three.js/examples/marker-training/examples/pattern-files/pattern-letterA.patt" id="A" registerevents>
+			<a-sphere radius="0.10" color="red"></a-sphere>
+			<a-entity id="lineAB"></a-entity>
+		</a-marker>
+
+		 <a-marker type="pattern" url="https://raw.githubusercontent.com/AR-js-org/AR.js/master/three.js/examples/marker-training/examples/pattern-files/pattern-letterB.patt" id="B" registerevents>
+			 <a-sphere radius="0.10" color="red"></a-sphere>
+			 <a-entity id="lineBC"></a-entity>
+		 </a-marker>
+
+		 <a-marker type="pattern" url="https://raw.githubusercontent.com/AR-js-org/AR.js/master/three.js/examples/marker-training/examples/pattern-files/pattern-letterC.patt" id="C" registerevents>
+			 <a-sphere radius="0.10" color="red"></a-sphere>
+			 <a-entity id="lineCD"></a-entity>
+		 </a-marker>
+
+		 <a-marker type="pattern" url="https://raw.githubusercontent.com/AR-js-org/AR.js/master/three.js/examples/marker-training/examples/pattern-files/pattern-letterD.patt" id="D" registerevents>
+			 <a-sphere radius="0.10" color="red"></a-sphere>
+			 <a-entity id="lineDF"></a-entity>
+		 </a-marker>
+
+		 <a-marker type="pattern" url="https://raw.githubusercontent.com/AR-js-org/AR.js/master/three.js/examples/marker-training/examples/pattern-files/pattern-letterF.patt" id="F" registerevents>
+			 <a-sphere radius="0.10" color="red"></a-sphere>
+			 <a-entity id="lineFA"></a-entity>
+		 </a-marker>
+
+		 <a-entity camera></a-entity>
+
+		 <a-entity run></a-entity>
+
+	</a-scene>
+</body>
+</html>
