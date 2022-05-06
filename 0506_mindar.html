@@ -1,0 +1,30 @@
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/hiukim/mind-ar-js@1.1.4/dist/mindar-face.prod.js"></script>
+	<!-- https://raw.githubusercontent.com/hiukim/mind-ar-js/master/dist/mindar-face.prod.js -->
+    <script src="https://cdn.jsdelivr.net/gh/hiukim/mind-ar-js@1.1.4/dist/mindar-face-aframe.prod.js"></script>
+  </head>
+  <body>
+    <a-scene mindar-face embedded color-space="sRGB" renderer="colorManagement: true, physicallyCorrectLights" vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false">
+	<a-assets>
+	  <a-asset-item id="dino" src="https://raw.githubusercontent.com/volverina/itde/main/scene.gltf"></a-asset-item>
+	</a-assets>
+
+
+      <a-camera active="false" position="0 0 0"></a-camera>
+
+      <a-entity mindar-face-target="anchorIndex: 1">
+	<!--<a-sphere color="green" radius="0.01"></a-sphere>-->
+	<a-gltf-model src="#dino" scale="0.05 0.05 0.05" position="0 -0.6 -1"></<a-gltf-model>
+      </a-entity>
+
+      <a-entity mindar-face-target="anchorIndex: 1">
+	<a-text color="red" value="Text in red" position="-0.6 0.3 0"></a-text>
+	<a-plane color="black" width="1.2" height="0.25" position="0 0.3 -0.1"></a-plane>
+      </a-entity>
+
+    </a-scene>
+  </body>
+</html>
